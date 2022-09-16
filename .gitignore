@@ -3,6 +3,7 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+!**/google-auth.json
 
 ### STS ###
 .apt_generated
@@ -34,3 +35,6 @@ build/
 /.mvn/
 /mvnw
 /mvnw.cmd
+
+
+/src/main/resources/google-auth.json
