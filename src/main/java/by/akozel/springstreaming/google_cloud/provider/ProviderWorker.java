@@ -33,11 +33,11 @@ public class ProviderWorker {
   private void observe(ContextRefreshedEvent event) {
     logger.info("Observer started");
     Flux<HttpStatus> task = Mono
-        .defer(() -> providerService.streamFileToClient(GB1_FILE_NAME, generateFileName()))
+        .defer(() -> providerService.streamFileToClientMultipart(GB1_FILE_NAME, generateFileName()))
         .repeat();
 
     Flux.merge(
-        IntStream.range(0, 2)
+        IntStream.range(0, 3)
             .mapToObj(operand -> task)
             .toList()
         )

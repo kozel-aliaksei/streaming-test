@@ -20,10 +20,13 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
@@ -74,6 +77,30 @@ public class ConsumerResource {
         .doOnError(BugGeneratorTrapException.class, e -> logger.warn(e.getMessage()));
 
 //    return Mono.just("ok");
+  }
+
+  @PostMapping(value = "/multipart/{filename}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @ResponseStatus(value = HttpStatus.OK)
+  public Mono<String> uploadMultipart(@PathVariable String filename,
+                                      @RequestPart("bulk-loads") Mono<FilePart> filePartMono) {
+
+
+    //return filePartMono.flatMapMany(Part::content)
+
+        //.doOnNext(filePart -> filePart.transferTo(getFilePath(filePart.filename())).subscribe())
+       // .then(Mono.just("ok"));
+
+    return Mono
+        .just(getFilePath(filename))
+        .doOnNext(path -> logger.info("[{}] Consuming POST request to save multipart file", filename))
+        .flatMap(filePath -> writeByPath(filePartMono.flatMapMany(Part::content), filePath))
+        .doOnNext(filePath -> logIfUnexpectedFileSize(filePath, validFileSize))
+        .doOnNext(this::purgeFile)
+        .doOnNext(path -> logger.info("[{}] File is done. Send HTTP response: ok", filename))
+        .then(Mono.just("ok"))
+        .doOnError(BugGeneratorTrapException.class, e -> logger.warn(e.getMessage()));
+
+   // return Mono.just("ok");
   }
 
   private DataBuffer generateBugIfRequired(DataBuffer dataBuffer, String filename) {
